@@ -1,4 +1,4 @@
-# Hotpot Challenge — Handoff to Claude Code
+# Hotpot Challenge
 
 ## What's in here
 
