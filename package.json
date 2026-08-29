@@ -1,0 +1,15 @@
+{
+  "name": "hotpot-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Score tracker for the BP President's Challenge Hot Pot Challenge booth game.",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node backend/test.js",
+    "preflight": "node backend/preflight.js"
+  }
+}

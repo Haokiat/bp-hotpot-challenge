@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hot Pot Challenge — Admin</title>
+<link rel="stylesheet" href="/tokens.css" />
+<style>
+  /* ============================================================
+     ADMIN SCREEN (booth laptop).
+     Deliberately plain: speed and accuracy over decoration
+     (PRD 6.5). Big targets, high contrast, no confetti.
+     ============================================================ */
+
+  body { background: var(--cream); min-height: 100vh; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: var(--s5) var(--s5) var(--s8); }
+
+  /* --- top bar --------------------------------------------------------- */
+  .topbar {
+    display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap;
+    padding-bottom: var(--s4); margin-bottom: var(--s5);
+    border-bottom: 3px solid rgba(27, 58, 107, 0.12);
+  }
+  .topbar h1 { font-size: 25px; font-weight: 800; color: var(--navy); }
+  .topbar .tag {
+    font-family: var(--font-body); font-weight: 900; font-size: 11px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    background: var(--green); color: #fff;
+    padding: 5px var(--s3); border-radius: var(--r-pill);
+  }
+  .spacer { margin-left: auto; }
+
+  .status {
+    display: inline-flex; align-items: center; gap: var(--s2);
+    font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--navy-soft);
+  }
+  .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); }
+  .status[data-state="reconnecting"] .dot, .status[data-state="polling"] .dot { background: var(--orange); }
+  .status[data-state="offline"] .dot { background: var(--coral); }
+
+  /* --- buttons --------------------------------------------------------- */
+  button { font-family: var(--font-body); cursor: pointer; border: none; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+    padding: var(--s3) var(--s5);
+    border-radius: var(--r-pill);
+    background: var(--green); color: #fff;
+    font-weight: 800; font-size: 15px; letter-spacing: 0.02em;
+    box-shadow: 0 2px 0 var(--green-deep), var(--lift-1);
+    transition: transform 140ms var(--spring), box-shadow 140ms var(--ease-out), background-color 140ms linear;
+  }
+  .btn:hover { background: #52a957; transform: translateY(-1px); box-shadow: 0 3px 0 var(--green-deep), var(--lift-2); }
+  .btn:active { transform: translateY(2px); box-shadow: 0 0 0 var(--green-deep), var(--lift-1); }
+  .btn:disabled { background: #b9c4d2; box-shadow: none; color: #edf1f5; cursor: not-allowed; transform: none; }
+
+  .btn.ghost {
+    background: transparent; color: var(--navy);
+    box-shadow: inset 0 0 0 2px rgba(27, 58, 107, 0.22);
+  }
+  .btn.ghost:hover { background: rgba(27, 58, 107, 0.06); box-shadow: inset 0 0 0 2px rgba(27,58,107,.36); }
+  .btn.ghost:active { transform: translateY(1px); }
+  .btn.warn { background: var(--orange); box-shadow: 0 2px 0 #c96712, var(--lift-1); }
+  .btn.warn:hover { background: #ff8f2c; }
+  .btn.navy { background: var(--navy); box-shadow: 0 2px 0 var(--navy-ink), var(--lift-1); }
+  .btn.navy:hover { background: var(--navy-soft); }
+  .btn.sm { padding: var(--s2) var(--s4); font-size: 13px; }
+  .btn .btn-icon { width: 1.4em; height: 1.4em; display: block; flex: none; margin: -2px 0; }
+
+  /* --- panels ---------------------------------------------------------- */
+  .grid { display: grid; grid-template-columns: 1fr 340px; gap: var(--s5); align-items: start; }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--paper);
+    border: 2px solid rgba(27, 58, 107, 0.10);
+    border-radius: var(--r-lg);
+    box-shadow: var(--lift-1);
+    padding: var(--s5);
+    margin-bottom: var(--s5);
+  }
+  .panel > h2 {
+    font-size: 13px; font-weight: 800; letter-spacing: 0.16em;
+    color: var(--navy-soft); margin-bottom: var(--s4);
+    display: flex; align-items: center; gap: var(--s2);
+  }
+  .step {
+    display: grid; place-items: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    font-family: var(--font-display); font-size: 13px; font-weight: 800;
+  }
+  .step.two { background: var(--sky); }
+  .step.three { background: var(--orange); }
+
+  /* --- selectable tiles ------------------------------------------------ */
+  .tiles { display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  .tiles.ing { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+  .tile {
+    position: relative;
+    display: flex; flex-direction: column; align-items: flex-start;
+    justify-content: flex-start; gap: 2px;
+    padding: var(--s4);
+    min-height: 74px;
+    background: #fff;
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 2px rgba(27, 58, 107, 0.14), var(--lift-1);
+    color: var(--navy);
+    text-align: left;
+    transition: transform 140ms var(--spring), box-shadow 140ms var(--ease-out);
+  }
+  .tile:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 2px rgba(74, 155, 78, 0.55), var(--lift-2); }
+  .tile:active { transform: translateY(1px); }
+  .tile[aria-pressed="true"] {
+    background: var(--green-wash);
+    box-shadow: inset 0 0 0 3px var(--green), var(--lift-2);
+  }
+  .tile[aria-pressed="true"]::after {
+    content: '✓'; position: absolute; top: 8px; right: 11px;
+    color: var(--green-deep); font-weight: 900; font-size: 16px;
+  }
+  /* `anywhere` rather than `break-word`: a department name with no spaces has
+     nothing to wrap at, and would otherwise spill across the neighbouring
+     tiles. The field accepts up to 60 characters. */
+  .tile .t-name {
+    font-weight: 800; font-size: 16px; line-height: 1.25;
+    max-width: 100%; overflow-wrap: anywhere;
+  }
+  .tile .t-meta {
+    font-size: 13px; font-weight: 700; color: var(--navy-soft); opacity: 0.8;
+    max-width: 100%; overflow-wrap: anywhere;
+  }
+  .tile .t-pts {
+    font-family: var(--font-display); font-weight: 800; font-size: 19px;
+    color: var(--green-deep);
+  }
+  .tile .t-art { width: 40px; height: 40px; display: block; margin-bottom: 2px; }
+
+  /* Throw-nudge: brief confirmation that the toss registered, so the operator
+     doesn't have to look up at the projector mid-rush. Kept short and small —
+     this screen is built for speed, not spectacle (PRD 6.5). */
+  .tile.thrown .t-art { animation: throwNudge 400ms var(--ease-out); }
+  @keyframes throwNudge {
+    0%   { transform: translate(0, 0) rotate(0) scale(1); }
+    30%  { transform: translate(4px, 8px) rotate(14deg) scale(.88); }
+    70%  { transform: translate(-10px, -22px) rotate(-24deg) scale(1.06); opacity: .55; }
+    100% { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; }
+  }
+  .tile.locked { opacity: 0.55; }
+
+  .soup-dot {
+    display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+    margin-right: 5px; vertical-align: 0;
+  }
+
+  /* --- full-width add-department bar ----------------------------------- */
+  .addbar {
+    display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap;
+    background: var(--paper);
+    border: 2px solid rgba(27, 58, 107, 0.10);
+    border-left: 6px solid var(--green);
+    border-radius: var(--r-lg);
+    box-shadow: var(--lift-1);
+    padding: var(--s3) var(--s4);
+    margin-bottom: var(--s5);
+  }
+  .addbar label {
+    font-size: 13px; font-weight: 800; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--navy-soft); white-space: nowrap;
+  }
+  /* The field takes the whole width of the grid — this bar spans both columns,
+     so there is no reason to cap it. */
+  .addbar input[type="text"] { flex: 1; min-width: 220px; }
+  .addbar .btn { min-width: 150px; }
+
+  /* --- sticky dock: recent tosses + action bar -------------------------- */
+  .dock { position: sticky; bottom: 0; z-index: 5; margin-top: var(--s5); }
+
+  .recent {
+    display: flex; align-items: center; gap: var(--s3);
+    background: var(--paper);
+    border: 2px solid rgba(27, 58, 107, 0.12);
+    border-bottom: none;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding: var(--s2) var(--s4);
+    box-shadow: var(--lift-2);
+  }
+  .recent-label {
+    font-size: 11px; font-weight: 900; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--navy-soft); white-space: nowrap;
+  }
+  .chips { display: flex; gap: var(--s2); overflow-x: auto; flex: 1; padding: 4px 0; scrollbar-width: thin; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 5px;
+    border-radius: var(--r-pill);
+    background: #fff;
+    box-shadow: inset 0 0 0 2px rgba(27, 58, 107, 0.14);
+    color: var(--navy); font-weight: 800; font-size: 13px;
+    white-space: nowrap;
+    transition: transform 120ms var(--spring), box-shadow 120ms var(--ease-out);
+  }
+  .chip:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 2px var(--green), var(--lift-1); }
+  .chip:active { transform: translateY(0); }
+  .chip svg { width: 26px; height: 26px; display: block; }
+  .chip .c-dept { font-weight: 700; font-size: 12px; color: var(--navy-soft); max-width: 11ch; overflow: hidden; text-overflow: ellipsis; }
+  .viewall {
+    background: transparent; color: var(--navy); font-weight: 800; font-size: 13px;
+    padding: 6px var(--s3); border-radius: var(--r-pill); white-space: nowrap;
+    box-shadow: inset 0 0 0 2px rgba(27, 58, 107, 0.18);
+  }
+  .viewall:hover { background: rgba(27, 58, 107, 0.06); }
+
+  /* --- toss correction dialogs ----------------------------------------- */
+  .toss-summary { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); }
+  .toss-summary svg { width: 52px; height: 52px; }
+  .toss-summary b { font-size: 18px; }
+  .toss-summary small { display: block; color: var(--navy-soft); font-weight: 700; }
+  .edit-label { font-size: 13px; font-weight: 800; color: var(--navy-soft); margin: 0 0 var(--s2); }
+  .swap-row { display: flex; gap: var(--s2); flex-wrap: wrap; margin-bottom: var(--s5); }
+  .swap {
+    display: grid; place-items: center; gap: 2px;
+    padding: var(--s2); min-width: 74px;
+    background: #fff; border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 2px rgba(27, 58, 107, 0.14);
+    font-weight: 800; font-size: 12px; color: var(--navy);
+  }
+  .swap svg { width: 34px; height: 34px; }
+  .swap:hover { box-shadow: inset 0 0 0 2px var(--green); }
+  .swap[aria-current="true"] { background: var(--green-wash); box-shadow: inset 0 0 0 3px var(--green); }
+
+  .swap-confirm {
+    display: flex; align-items: center; justify-content: center; gap: var(--s5);
+    margin-bottom: var(--s4);
+  }
+  .swap-confirm .side { display: grid; place-items: center; gap: 2px; }
+  .swap-confirm svg { width: 58px; height: 58px; }
+  .swap-confirm .nm { font-weight: 800; font-size: 14px; }
+  .swap-confirm .pt { font-weight: 700; font-size: 13px; color: var(--navy-soft); }
+  .swap-confirm .arrow { font-size: 26px; color: var(--navy-soft); font-weight: 800; }
+  .swap-delta { text-align: center; font-weight: 700; margin: 0 0 var(--s5); color: var(--navy-soft); }
+  .swap-delta b { font-family: var(--font-display); font-size: 21px; }
+  .swap-delta b.up { color: var(--green-deep); }
+  .swap-delta b.down { color: var(--coral); }
+
+  /* Editing rewrites a score that is already on the board — styled as a
+     destructive action so it does not read like a neutral link. */
+  .edit-btn {
+    padding: 5px var(--s4); border-radius: var(--r-pill);
+    background: var(--coral); color: #fff;
+    font-weight: 800; font-size: 12px; letter-spacing: .04em;
+    box-shadow: 0 2px 0 #bf3c60;
+    transition: transform 120ms var(--spring), background-color 120ms linear;
+    white-space: nowrap;
+  }
+  .edit-btn:hover { background: #f0658a; transform: translateY(-1px); }
+  .edit-btn:active { transform: translateY(1px); box-shadow: none; }
+
+  dialog.wide { max-width: 640px; }
+  .history-bar { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); flex-wrap: wrap; }
+  .history-bar select { font-family: var(--font-body); font-weight: 700; padding: 6px var(--s3); border-radius: var(--r-sm); border: 2px solid rgba(27,58,107,.18); background: #fff; color: var(--navy); }
+  .chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--navy-soft); }
+  .history-list { max-height: 52vh; overflow-y: auto; scrollbar-width: thin; }
+  .hrow {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s2) 0; border-bottom: 1px solid rgba(27, 58, 107, 0.10);
+  }
+  .hrow svg { width: 34px; height: 34px; flex: none; }
+  .hrow .h-main { flex: 1; min-width: 0; }
+  .hrow .h-name { font-weight: 800; font-size: 15px; }
+  .hrow .h-sub { font-size: 12px; font-weight: 700; color: var(--navy-soft); opacity: .8; }
+  .hrow .h-pts { font-family: var(--font-display); font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .hrow.voided { opacity: .5; }
+  .hrow.voided .h-name { text-decoration: line-through; }
+
+  /* --- score feedback -------------------------------------------------- */
+  .feedback {
+    z-index: 5;
+    display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap;
+    padding: var(--s4) var(--s5);
+    border-radius: var(--r-lg);
+    background: var(--navy); color: #fff;
+    box-shadow: var(--lift-3);
+  }
+  .recent + .feedback { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .feedback .msg { font-weight: 800; font-size: 16px; min-width: 200px; }
+  .feedback .msg small { display: block; font-weight: 600; font-size: 13px; opacity: 0.72; }
+  .feedback.err { background: var(--coral); }
+  .feedback.ok { background: var(--green-deep); }
+  .feedback.flash { animation: pop 340ms var(--spring); }
+  @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.012); } 100% { transform: scale(1); } }
+
+  /* --- department admin list ------------------------------------------- */
+  .dept-row {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s3) 0;
+    border-bottom: 1px solid rgba(27, 58, 107, 0.10);
+  }
+  .dept-row:last-child { border-bottom: none; }
+  .dept-row .d-name { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dept-row.archived .d-name { color: var(--navy-soft); opacity: .75; }
+  .dept-row.archived .d-score { color: var(--navy-soft); opacity: .75; }
+  #archivePanel > h2 { color: var(--orange); }
+  .restore-btn {
+    padding: 5px var(--s3); border-radius: var(--r-pill);
+    background: var(--orange); color: #fff;
+    font-weight: 800; font-size: 12px; letter-spacing: .04em;
+    box-shadow: 0 2px 0 #c96712;
+    transition: transform 120ms var(--spring), background-color 120ms linear;
+    white-space: nowrap;
+  }
+  .restore-btn:hover { background: #ff8f2c; transform: translateY(-1px); }
+  .restore-btn:active { transform: translateY(1px); box-shadow: none; }
+
+  .dept-row .d-score {
+    font-family: var(--font-display); font-weight: 800; font-size: 17px;
+    color: var(--navy); font-variant-numeric: tabular-nums;
+  }
+  .icon-btn {
+    display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 9px;
+    background: transparent; color: var(--navy-soft); font-size: 15px;
+    transition: transform 120ms var(--spring), background-color 120ms linear;
+  }
+  .icon-btn:hover { background: rgba(27, 58, 107, 0.09); color: var(--navy); }
+  .icon-btn .icon-glyph { width: 17px; height: 17px; display: block; }
+  .icon-btn:active { transform: scale(0.92); }
+  .icon-btn.danger:hover { background: rgba(232, 84, 122, 0.14); color: var(--coral); }
+
+  input[type="text"] {
+    font-family: var(--font-body); font-size: 15px; font-weight: 600;
+    padding: var(--s3) var(--s4);
+    border-radius: var(--r-sm);
+    border: 2px solid rgba(27, 58, 107, 0.18);
+    background: #fff; color: var(--navy);
+    width: 100%;
+  }
+  input[type="text"]:focus { border-color: var(--green); outline: none; }
+
+
+  .hint { font-size: 13px; color: var(--navy-soft); opacity: 0.75; margin-top: var(--s3); line-height: 1.6; }
+  kbd {
+    font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700;
+    background: rgba(27,58,107,.1); border-radius: 4px; padding: 2px 5px;
+  }
+
+  /* --- modal ----------------------------------------------------------- */
+  dialog {
+    border: none; border-radius: var(--r-lg); padding: var(--s6);
+    max-width: 460px; width: calc(100% - 32px);
+    box-shadow: var(--lift-3);
+    background: var(--paper); color: var(--navy);
+  }
+  dialog::backdrop { background: rgba(18, 41, 76, 0.55); backdrop-filter: blur(2px); }
+  dialog h3 { font-family: var(--font-display); font-size: 21px; margin-bottom: var(--s3); }
+  dialog p { line-height: 1.6; margin: 0 0 var(--s5); font-size: 15px; }
+  .dialog-actions { display: flex; gap: var(--s2); justify-content: flex-end; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <h1>Hot Pot Challenge</h1>
+    <span class="tag">Admin</span>
+    <div class="spacer"></div>
+    <div class="status" id="status" data-state="live"><span class="dot"></span><span id="statusText">Live</span></div>
+    <a class="btn ghost sm" href="/display" target="_blank" rel="noopener">Open display ↗</a>
+    <button class="btn navy" id="announceBtn" type="button"></button>
+  </div>
+
+  <!-- Full-width, above both columns: adding a department happens between
+       teams, so it should not be buried at the bottom of a scrolling sidebar. -->
+  <section class="addbar">
+    <label for="newDept">Add department</label>
+    <input type="text" id="newDept" placeholder="e.g. Corporate Communications" maxlength="60" />
+    <button class="btn" id="addDept">+ Add</button>
+  </section>
+
+  <div class="grid">
+    <div>
+      <!-- STEP 1 — department -->
+      <section class="panel">
+        <h2><span class="step">1</span> Select department</h2>
+        <div class="tiles" id="deptTiles"></div>
+      </section>
+
+      <!-- soup base — only for a department's first scoring action -->
+      <section class="panel" id="soupPanel" hidden>
+        <h2><span class="step two">2</span> Choose soup base</h2>
+        <div class="tiles" id="soupTiles"></div>
+      </section>
+
+      <!-- STEP 2/3 — ingredient -->
+      <section class="panel">
+        <h2><span class="step three" id="ingStep">2</span> Tap the ingredient tossed</h2>
+        <div class="tiles ing" id="ingTiles"></div>
+      </section>
+    </div>
+
+    <!-- SIDEBAR — department management -->
+    <aside>
+      <section class="panel">
+        <h2>Manage departments</h2>
+        <div id="deptAdmin"></div>
+      </section>
+
+      <!-- Safety net: archiving is the non-destructive option, but on a live
+           booth it can still be a misclick. Everything archived stays here,
+           with its points, ready to be put back in one tap. -->
+      <section class="panel" id="archivePanel" hidden>
+        <h2>↩ Archived — restorable</h2>
+        <div id="archivedList"></div>
+        <p class="hint">These are off the leaderboard but nothing was lost. Restoring puts the department back with every point it had.</p>
+      </section>
+
+    </aside>
+  </div>
+
+  <!-- Sticky dock: the recent tosses sit directly above the action bar, so the
+       last few entries are always in the operator's eyeline. A double tap gets
+       spotted and corrected without leaving the scoring flow. -->
+  <div class="dock">
+    <section class="recent" id="recent" hidden>
+      <span class="recent-label">Recent</span>
+      <div class="chips" id="recentChips"></div>
+      <button class="viewall" id="viewAll" type="button">View all →</button>
+    </section>
+
+    <div class="feedback" id="feedback">
+      <div class="msg" id="fbMsg">Select a department to begin<small id="fbSub">Nothing scored yet</small></div>
+      <div class="spacer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Correct ONE toss. Opened from a chip or from the full log. -->
+<dialog id="editToss">
+  <h3>Correct this toss</h3>
+  <div class="toss-summary" id="tossSummary"></div>
+  <p class="edit-label">Change the ingredient to:</p>
+  <div class="swap-row" id="swapRow"></div>
+  <div class="dialog-actions">
+    <button class="btn warn" id="removeToss" type="button">Remove this toss</button>
+    <button class="btn ghost" id="closeEdit" type="button">Close</button>
+  </div>
+</dialog>
+
+<!-- Changing an ingredient rewrites a score that is already on the board, so
+     it asks first. Shows both ingredients and the exact point change, because
+     "Carrot → Mushroom" is only meaningful with the +5 spelled out. -->
+<dialog id="confirmSwap">
+  <h3>Confirm the change</h3>
+  <div class="swap-confirm" id="swapConfirm"></div>
+  <p class="swap-delta" id="swapDelta"></p>
+  <div class="dialog-actions">
+    <button class="btn ghost" id="swapCancel" type="button">Cancel</button>
+    <button class="btn" id="swapApply" type="button">Yes, change it</button>
+  </div>
+</dialog>
+
+<!-- The full log, for a correction found long after it happened. -->
+<dialog id="historyDlg" class="wide">
+  <h3>Toss history</h3>
+  <div class="history-bar">
+    <select id="historyFilter" aria-label="Filter by department"></select>
+    <label class="chk"><input type="checkbox" id="showVoided" /> Show removed</label>
+    <div class="spacer"></div>
+    <button class="btn ghost sm" id="closeHistory" type="button">Close</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</dialog>
+
+<dialog id="confirmDlg">
+  <h3 id="dlgTitle">Are you sure?</h3>
+  <p id="dlgBody"></p>
+  <div class="dialog-actions" id="dlgActions"></div>
+</dialog>
+
+<script type="module">
+import { api, connectLive, ApiError } from '/api.js';
+import { injectSprites, spriteSvg, iconSvg } from '/sprites.js';
+
+injectSprites();
+
+const $ = (id) => document.getElementById(id);
+const SOUP_COLORS = { tomato: '#E8547A', mala: '#D4442A', herbal: '#4A9B4E', laksa: '#F5821F' };
+
+let departments = [], archived = [], ingredients = [], soupBases = [], announced = false;
+let leaderboard = [];      // only used to name the winner in the announce prompt
+let recent = [];           // most recent tosses, for the dock
+const RECENT_N = 12;
+let selectedDept = null;
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const current = () => departments.find((d) => d.id === selectedDept) ?? null;
+const needsSoup = () => { const d = current(); return d !== null && d.soup_base === null; };
+
+/* ---------------- rendering ---------------- */
+/* Tiles are updated IN PLACE, never rebuilt.
+   Every SSE update used to run replaceChildren over both tile grids. That
+   destroyed and recreated the button the operator was pressing, roughly 17ms
+   after their own previous score. Three things went wrong:
+     - a rebuild landing between mousedown and mouseup swallowed the tap, and
+       the toss was lost with nothing on screen to show it;
+     - the throw-nudge animation died ~20ms into its 400ms run;
+     - keyboard focus was dropped after every score.
+   Reusing the elements fixes all three. */
+const deptTiles = new Map(); // department id -> button
+
+function renderDepts() {
+  const host = $('deptTiles');
+  if (!departments.length) {
+    host.replaceChildren();
+    deptTiles.clear();
+    host.innerHTML = '<p class="hint" style="margin:0">No departments yet — add one in the sidebar.</p>';
+    return;
+  }
+  if (host.querySelector('.hint')) host.replaceChildren(); // clear the empty state
+
+  // drop tiles for departments that are gone
+  for (const [id, el] of deptTiles) {
+    if (!departments.some((d) => d.id === id)) { el.remove(); deptTiles.delete(id); }
+  }
+
+  departments.forEach((d, idx) => {
+    let b = deptTiles.get(d.id);
+    if (!b) {
+      b = document.createElement('button');
+      b.className = 'tile';
+      b.type = 'button';
+      b.innerHTML = '<span class="t-name"></span><span class="t-meta"></span>';
+      // Capture the id, not the object — d is replaced on every refresh.
+      const id = d.id;
+      b.onclick = () => {
+        selectedDept = id;
+        renderAll();
+        // Tell the display which team is up, so its score card flips before this
+        // team has tossed anything. Fire-and-forget on purpose: if it fails the
+        // operator can still score — only the display's header is affected.
+        api.setActiveDepartment(id).catch(() => {});
+      };
+      deptTiles.set(d.id, b);
+    }
+
+    b.setAttribute('aria-pressed', String(d.id === selectedDept));
+    b.setAttribute('aria-label',
+      `${d.name}, ${d.score} points, ${d.soup_base ? `${d.soup_base} base` : 'no soup base yet'}`);
+    b.querySelector('.t-name').textContent = d.name;
+    const meta = b.querySelector('.t-meta');
+    meta.replaceChildren();
+    if (d.soup_base) {
+      const dot = document.createElement('span');
+      dot.className = 'soup-dot';
+      dot.style.background = SOUP_COLORS[d.soup_base] ?? '#1B3A6B';
+      meta.append(`${d.score} pts · `, dot, d.soup_base);
+    } else {
+      meta.textContent = `${d.score} pts · no soup base yet`;
+    }
+
+    if (host.children[idx] !== b) host.insertBefore(b, host.children[idx] ?? null);
+  });
+}
+
+function renderSoup() {
+  const show = needsSoup();
+  $('soupPanel').hidden = !show;
+  $('ingStep').textContent = show ? '3' : '2';
+  if (!show) return;
+  $('soupTiles').replaceChildren(...soupBases.map((s) => {
+    const b = document.createElement('button');
+    b.className = 'tile';
+    b.type = 'button';
+    b.setAttribute('aria-label', `Set ${s.name} soup base`);
+    b.innerHTML = `<span class="t-name"><span class="soup-dot" style="background:${s.color}"></span>${esc(s.name)}</span>
+                   <span class="t-meta">visual only</span>`;
+    b.onclick = () => act(
+      () => api.setSoupBase(selectedDept, s.id),
+      () => ok(`${current()?.name ?? 'Department'} → ${s.name} base`, 'Soup base is locked in for the rest of the event')
+    );
+    return b;
+  }));
+}
+
+// The ingredient list is fixed for the whole event, so these tiles are built
+// once and only their locked state changes afterwards. This is the hot path —
+// the operator taps these hundreds of times an hour.
+let ingSig = '';
+
+function renderIngredients() {
+  const host = $('ingTiles');
+  const sig = ingredients.map((i) => `${i.id}:${i.name}:${i.point_value}:${i.sprite}`).join('|');
+
+  if (sig !== ingSig) {
+    ingSig = sig;
+    host.replaceChildren(...ingredients.map((ing, i) => {
+      const b = document.createElement('button');
+      b.className = 'tile';
+      b.type = 'button';
+      b.dataset.ingId = ing.id;
+      b.setAttribute('aria-label', `Score ${ing.name}, ${ing.point_value} points`);
+      b.innerHTML = `${spriteSvg(ing.sprite, 't-art')}
+                     <span class="t-name">${esc(ing.name)}</span>
+                     <span class="t-pts">+${ing.point_value}</span>
+                     ${i < 9 ? `<span class="t-meta" style="position:absolute;top:8px;right:11px">${i + 1}</span>` : ''}`;
+      b.onclick = () => score(ing);
+      return b;
+    }));
+  }
+
+  const locked = !selectedDept;
+  for (const b of host.children) {
+    b.disabled = locked;
+    b.classList.toggle('locked', locked);
+  }
+}
+
+function renderArchived() {
+  const panel = $('archivePanel');
+  panel.hidden = archived.length === 0;
+  if (!archived.length) return;
+  $('archivedList').replaceChildren(...archived.map((d) => {
+    const row = document.createElement('div');
+    row.className = 'dept-row archived';
+    row.innerHTML = `<span class="d-name">${esc(d.name)}</span><span class="d-score">${d.score}</span>`;
+    const btn = document.createElement('button');
+    btn.className = 'restore-btn'; btn.type = 'button';
+    btn.textContent = 'Restore';
+    btn.setAttribute('aria-label', `Restore ${d.name} with its ${d.score} points`);
+    btn.onclick = () => act(
+      () => api.restoreDepartment(d.id),
+      () => ok('Restored', `"${d.name}" is back with ${d.score} pts`)
+    );
+    row.append(btn);
+    return row;
+  }));
+}
+
+function renderDeptAdmin() {
+  $('deptAdmin').replaceChildren(...departments.map((d) => {
+    const row = document.createElement('div');
+    row.className = 'dept-row';
+    row.innerHTML = `<span class="d-name">${esc(d.name)}</span><span class="d-score">${d.score}</span>`;
+
+    const edit = document.createElement('button');
+    edit.className = 'icon-btn'; edit.type = 'button';
+    edit.title = `Rename ${d.name}`; edit.setAttribute('aria-label', `Rename ${d.name}`);
+    edit.textContent = '✎';
+    edit.onclick = () => promptRename(d);
+
+    const del = document.createElement('button');
+    del.className = 'icon-btn danger'; del.type = 'button';
+    del.title = `Remove ${d.name}`; del.setAttribute('aria-label', `Remove ${d.name}`);
+    del.innerHTML = iconSvg('bin', 'icon-glyph');
+    del.onclick = () => removeDept(d);
+
+    row.append(edit, del);
+    return row;
+  }));
+}
+
+/* ---------------- toss history ----------------
+   This is the only way to fix a logged toss. The dock shows the recent entries
+   so a mistake is spotted straight away — a double tap, or the wrong ingredient
+   noticed a few players later; "View all" reaches everything else.
+   Nothing is hard-deleted, so a mis-tap on Remove is itself reversible. */
+const timeOf = (iso) =>
+  new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+function renderRecent() {
+  const live = recent.filter((e) => !e.voided).slice(0, RECENT_N);
+  $('recent').hidden = live.length === 0;
+  if (!live.length) return;
+  $('recentChips').replaceChildren(...live.map((e) => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.type = 'button';
+    b.setAttribute('aria-label',
+      `Correct: ${e.ingredient_name}, ${e.points_awarded} points, ${e.department_name}, ${timeOf(e.timestamp)}`);
+    b.innerHTML = `${spriteSvg(e.sprite)}<span>+${e.points_awarded}</span>` +
+                  `<span class="c-dept">${esc(e.department_name)}</span>`;
+    b.onclick = () => openEdit(e);
+    return b;
+  }));
+}
+
+let editing = null;
+
+function openEdit(e) {
+  editing = e;
+  $('tossSummary').innerHTML =
+    `${spriteSvg(e.sprite)}<div><b>${esc(e.ingredient_name)} · +${e.points_awarded}</b>` +
+    `<small>${esc(e.department_name)} · ${timeOf(e.timestamp)}</small></div>`;
+  $('swapRow').replaceChildren(...ingredients.map((ing) => {
+    const b = document.createElement('button');
+    b.className = 'swap';
+    b.type = 'button';
+    if (ing.id === e.ingredient_id) b.setAttribute('aria-current', 'true');
+    b.setAttribute('aria-label', `Change to ${ing.name}, ${ing.point_value} points`);
+    b.innerHTML = `${spriteSvg(ing.sprite)}<span>${esc(ing.name)}</span><span>+${ing.point_value}</span>`;
+    b.onclick = () => {
+      $('editToss').close();
+      if (ing.id === e.ingredient_id) return; // already this ingredient
+      pendingSwap = { from: e, to: ing };
+      openSwapConfirm();
+    };
+    return b;
+  }));
+  $('editToss').showModal();
+}
+
+/* ---- confirm an ingredient change ----
+   Removing a toss is reversible from the log, but a change rewrites a live
+   score in place, so this one asks first. */
+let pendingSwap = null;
+
+function openSwapConfirm() {
+  const { from, to } = pendingSwap;
+  const delta = to.point_value - from.points_awarded;
+  $('swapConfirm').innerHTML =
+    `<div class="side">${spriteSvg(from.sprite)}` +
+    `<span class="nm">${esc(from.ingredient_name)}</span><span class="pt">+${from.points_awarded}</span></div>` +
+    `<span class="arrow">→</span>` +
+    `<div class="side">${spriteSvg(to.sprite)}` +
+    `<span class="nm">${esc(to.name)}</span><span class="pt">+${to.point_value}</span></div>`;
+  $('swapDelta').innerHTML = delta === 0
+    ? `<b>${esc(from.department_name)}</b> keeps the same total — both are worth ${to.point_value}.`
+    : `<b>${esc(from.department_name)}</b> changes by ` +
+      `<b class="${delta > 0 ? 'up' : 'down'}">${delta > 0 ? '+' : ''}${delta}</b>`;
+  $('confirmSwap').showModal();
+}
+
+// Cancel goes back to the picker rather than dropping the operator out entirely.
+$('swapCancel').onclick = () => {
+  $('confirmSwap').close();
+  if (pendingSwap) openEdit(pendingSwap.from);
+};
+
+$('swapApply').onclick = () => {
+  const p = pendingSwap;
+  pendingSwap = null;
+  $('confirmSwap').close();
+  if (!p) return;
+  act(() => api.replaceScore(p.from.id, p.to.id),
+      () => ok('Toss corrected', `${p.from.ingredient_name} → ${p.to.name} for ${p.from.department_name}`));
+};
+
+$('removeToss').onclick = () => {
+  const e = editing;
+  $('editToss').close();
+  if (!e) return;
+  act(() => api.voidScore(e.id),
+      () => ok('Toss removed', `${e.ingredient_name} −${e.points_awarded} from ${e.department_name}`));
+};
+$('closeEdit').onclick = () => $('editToss').close();
+
+/* ---- full log ---- */
+async function openHistory() {
+  const sel = $('historyFilter');
+  const keep = sel.value;
+  sel.replaceChildren(
+    new Option('All departments', ''),
+    ...departments.map((d) => new Option(d.name, d.id)),
+  );
+  sel.value = keep;
+  await drawHistory();
+  $('historyDlg').showModal();
+}
+
+async function drawHistory() {
+  const list = $('historyList');
+  list.textContent = 'Loading…';
+  let events;
+  try {
+    ({ events } = await api.scoreEvents({
+      limit: 300,
+      departmentId: $('historyFilter').value || null,
+      includeVoided: $('showVoided').checked,
+    }));
+  } catch (e) {
+    list.textContent = e instanceof ApiError ? e.message : 'Could not load the history.';
+    return;
+  }
+  if (!events.length) { list.textContent = 'No tosses yet.'; return; }
+
+  list.replaceChildren(...events.map((e) => {
+    const row = document.createElement('div');
+    row.className = 'hrow' + (e.voided ? ' voided' : '');
+    row.innerHTML =
+      `${spriteSvg(e.sprite)}<div class="h-main">` +
+      `<div class="h-name">${esc(e.ingredient_name)}</div>` +
+      `<div class="h-sub">${esc(e.department_name)} · ${timeOf(e.timestamp)}${e.voided ? ' · removed' : ''}</div>` +
+      `</div><span class="h-pts">+${e.points_awarded}</span>`;
+
+    const btn = document.createElement('button');
+    btn.className = e.voided ? 'restore-btn' : 'edit-btn';
+    btn.type = 'button';
+    btn.textContent = e.voided ? 'Restore' : 'Edit';
+    btn.setAttribute('aria-label',
+      `${e.voided ? 'Restore' : 'Edit'} ${e.ingredient_name} for ${e.department_name}`);
+    btn.onclick = async () => {
+      if (e.voided) {
+        await act(() => api.restoreScore(e.id),
+                  () => ok('Toss restored', `${e.ingredient_name} +${e.points_awarded} to ${e.department_name}`));
+        await drawHistory();
+      } else {
+        $('historyDlg').close();
+        openEdit(e);
+      }
+    };
+    row.append(btn);
+    return row;
+  }));
+}
+
+$('viewAll').onclick = openHistory;
+$('closeHistory').onclick = () => $('historyDlg').close();
+$('historyFilter').onchange = drawHistory;
+$('showVoided').onchange = drawHistory;
+
+function renderAnnounce() {
+  const b = $('announceBtn');
+  b.innerHTML = announced
+    ? '<span aria-hidden="true">✕</span> Clear winner reveal'
+    : `${iconSvg('trophy', 'btn-icon')} Announce winner`;
+  b.className = announced ? 'btn warn' : 'btn navy';
+}
+
+function renderAll() { renderDepts(); renderSoup(); renderIngredients(); renderDeptAdmin(); renderArchived(); renderRecent(); renderAnnounce(); }
+
+/* ---------------- feedback bar ---------------- */
+function feedback(cls, msg, sub) {
+  const bar = $('feedback');
+  bar.className = `feedback ${cls}`;
+  $('fbMsg').innerHTML = `${esc(msg)}<small>${esc(sub ?? '')}</small>`;
+  bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash');
+}
+const ok = (m, s) => feedback('ok', m, s);
+const err = (m, s) => feedback('err', m, s);
+
+/* ---------------- actions ---------------- */
+// Actions run one at a time, in the order they were tapped. They are QUEUED,
+// never dropped: an organiser tapping fast during a rush must not lose a toss
+// silently — that would leave the score quietly wrong with nothing on screen to
+// show it. An accidental double-tap scores twice instead, which is visible in
+// the feedback bar and removable from the Recent strip.
+let chain = Promise.resolve();
+
+function act(fn, onOk) {
+  chain = chain.then(async () => {
+    try {
+      await fn();
+      await refresh();
+      onOk?.();
+    } catch (e) {
+      err(e instanceof ApiError ? e.message : 'Something went wrong', e?.code ?? '');
+      await refresh().catch(() => {});
+    }
+  });
+  return chain;
+}
+
+function score(ing) {
+  const d = current();
+  if (!d) return err('Pick a department first', 'Step 1');
+  // Nudge the tile that was tapped, before the round trip.
+  const tile = $('ingTiles').querySelector(`[data-ing-id="${CSS.escape(ing.id)}"]`);
+  if (tile) {
+    tile.classList.remove('thrown'); void tile.offsetWidth; tile.classList.add('thrown');
+    // Clear it once the 400ms run is over. Now that tiles persist, the class
+    // would otherwise stay on every tile the operator has ever tapped.
+    setTimeout(() => tile.classList.remove('thrown'), 440);
+  }
+  act(
+    () => api.score(d.id, ing.id),
+    () => ok(`${d.name} +${ing.point_value}`, `${ing.name} · now ${current()?.score ?? '?'} pts`)
+  );
+}
+
+function promptRename(d) {
+  const name = window.prompt(`Rename "${d.name}" to:`, d.name);
+  if (name === null || name.trim() === d.name) return;
+  act(() => api.renameDepartment(d.id, name), () => ok('Renamed', `Now "${name.trim()}" · score kept`));
+}
+
+function removeDept(d) {
+  if (d.score > 0) {
+    return confirmDialog({
+      title: `"${d.name}" has ${d.score} points`,
+      body: `Deleting would lose those points. Archive it instead — it leaves the leaderboard but its score history stays intact.`,
+      actions: [
+        { label: 'Cancel', cls: 'btn ghost' },
+        { label: 'Archive it', cls: 'btn warn', run: () =>
+            act(() => api.removeDepartment(d.id, { archive: true }),
+                () => ok('Archived', `"${d.name}" kept its ${d.score} pts — restore it from the sidebar`)) },
+      ],
+    });
+  }
+  confirmDialog({
+    title: `Remove "${d.name}"?`,
+    body: 'It has no points yet, so it will be deleted outright.',
+    actions: [
+      { label: 'Cancel', cls: 'btn ghost' },
+      { label: 'Delete', cls: 'btn warn', run: () =>
+          act(() => api.removeDepartment(d.id), () => ok('Deleted', `"${d.name}" removed`)) },
+    ],
+  });
+}
+
+function confirmDialog({ title, body, actions }) {
+  const dlg = $('confirmDlg');
+  $('dlgTitle').textContent = title;
+  $('dlgBody').textContent = body;
+  $('dlgActions').replaceChildren(...actions.map((a) => {
+    const b = document.createElement('button');
+    b.className = a.cls; b.type = 'button'; b.textContent = a.label;
+    b.onclick = () => { dlg.close(); a.run?.(); };
+    return b;
+  }));
+  dlg.showModal();
+}
+
+$('addDept').onclick = () => {
+  const input = $('newDept');
+  const name = input.value.trim();
+  if (!name) return err('Enter a name first', '');
+  act(() => api.addDepartment(name), () => { input.value = ''; ok('Department added', `"${name}" starts at 0 pts`); });
+};
+$('newDept').onkeydown = (e) => { if (e.key === 'Enter') $('addDept').click(); };
+$('announceBtn').onclick = () => {
+  // Clearing just returns to the game and is instantly reversible — no prompt.
+  if (announced) {
+    return act(() => api.announce(false), () => ok('Reveal cleared', 'The game can continue'));
+  }
+
+  const winners = leaderboard.filter((d) => d.is_leader);
+  const body = winners.length === 0
+    ? 'No department has scored yet, so there is no winner to show. The display will stay on the leaderboard.'
+    : winners.length === 1
+      ? `${winners[0].name} will be announced as the winner with ${winners[0].score} points, and the final hotpot will fill the display screen.`
+      : `${winners.slice(0, -1).map((w) => w.name).join(', ')} and ${winners[winners.length - 1].name} ` +
+        `are tied on ${winners[0].score} points. ` +
+        `${winners.length === 2 ? 'Both' : 'All of them'} will be announced as winners.`;
+
+  confirmDialog({
+    title: winners.length > 1 ? 'Announce the winners?' : 'Announce the winner?',
+    body: `${body} You can clear the reveal afterwards if the game carries on.`,
+    actions: [
+      { label: 'Not yet', cls: 'btn ghost' },
+      { label: winners.length > 1 ? 'Announce them' : 'Announce winner', cls: 'btn navy', run: () =>
+          act(() => api.announce(true),
+              () => ok('Winner announced', 'The final hotpot is on the display screen')) },
+    ],
+  });
+};
+
+// Keyboard: numbers fire ingredients.
+document.addEventListener('keydown', (e) => {
+  // A confirmation dialog moves focus onto its own buttons, which are neither
+  // an input nor a textarea — so without this the shortcuts stayed live behind
+  // the modal, and a stray number key logged a score the operator never meant.
+  if (document.querySelector('dialog[open]')) return;
+  // e.target is not always an Element (it can be `document`), so guard .matches.
+  if (e.target instanceof Element && e.target.matches('input, textarea')) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const n = Number(e.key);
+  if (Number.isInteger(n) && n >= 1 && n <= 9 && ingredients[n - 1] && selectedDept) {
+    e.preventDefault();
+    score(ingredients[n - 1]);
+  }
+});
+
+/* ---------------- data ---------------- */
+let booted = false;
+
+function ingest(s) {
+  if (s.departments) departments = s.departments;
+  if (s.archived) archived = s.archived;
+  if (s.leaderboard) leaderboard = s.leaderboard;
+  if (s.ingredients) ingredients = s.ingredients;
+  if (s.soup_bases) soupBases = s.soup_bases;
+  if (typeof s.announced === 'boolean') announced = s.announced;
+  if (selectedDept && !departments.some((d) => d.id === selectedDept)) selectedDept = null;
+
+  // Opening the admin screen mid-event must show the real tally, not a
+  // "nothing scored yet" line that contradicts the display screen.
+  if (!booted) {
+    booted = true;
+    const n = s.total_tosses ?? 0;
+    feedback('', 'Select a department to begin',
+      n === 0 ? 'Nothing scored yet' : `${n} ingredients tossed · ${s.total_score} points so far`);
+  }
+  renderAll();
+}
+
+async function refresh() {
+  const [state, log] = await Promise.all([
+    api.state(),
+    api.scoreEvents({ limit: RECENT_N * 2 }).catch(() => ({ events: [] })),
+  ]);
+  recent = log.events;
+  ingest(state);
+}
+
+const STATUS_TEXT = { live: 'Live', reconnecting: 'Reconnecting…', polling: 'Reconnecting…', offline: 'Offline' };
+
+connectLive({
+  onState: (s) => { ingest(s); refresh().catch(() => {}); },
+  // Another surface changed something (or a poll landed) — resync the lists.
+  onUpdate: (p) => { if (typeof p.announced === 'boolean') announced = p.announced;
+                     refresh().catch(() => {}); },
+  onStatus: (s) => { $('status').dataset.state = s; $('statusText').textContent = STATUS_TEXT[s] ?? s; },
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# Live event data — generated at runtime, never source
+backend/data/
+
+# macOS
+.DS_Store
