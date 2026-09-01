@@ -13,8 +13,13 @@
  */
 
 export const SPRITE_KEYS = [
-  'broccoli', 'mushroom', 'carrot', 'shrimp-ball', 'fish-tofu',
-  'cabbage', 'corn', 'meatball', 'generic',
+  // the confirmed event list
+  'crab', 'shabu-beef', 'pork-ribs', 'rice', 'cabbage', 'corn', 'broccoli',
+  'potato', 'mushroom', 'carrot', 'tomato', 'capsicum', 'red-pepper',
+  'eggplant', 'green-chilli', 'peas',
+  // kept from the placeholder set, in case the list changes again
+  'shrimp-ball', 'fish-tofu', 'meatball',
+  'generic',
 ];
 
 const SPRITE_SET = new Set(SPRITE_KEYS);
@@ -76,6 +81,39 @@ const MARKUP = `
   </linearGradient>
   <linearGradient id="gTrophyBase" x1="0" y1="0" x2=".2" y2="1">
     <stop offset="0" stop-color="#F0B93C"/><stop offset="1" stop-color="#A87C06"/>
+  </linearGradient>
+  <linearGradient id="gCrab" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#FF8A5C"/><stop offset=".5" stop-color="#E8502A"/><stop offset="1" stop-color="#A82E12"/>
+  </linearGradient>
+  <linearGradient id="gBeef" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#F0A0A0"/><stop offset=".5" stop-color="#D9606A"/><stop offset="1" stop-color="#A83848"/>
+  </linearGradient>
+  <linearGradient id="gPork" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#C98A5C"/><stop offset=".5" stop-color="#A2603A"/><stop offset="1" stop-color="#70391E"/>
+  </linearGradient>
+  <linearGradient id="gRice" x1=".25" y1="0" x2=".6" y2="1">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F4ECDA"/><stop offset="1" stop-color="#D8C9A8"/>
+  </linearGradient>
+  <linearGradient id="gPotato" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#E0BC86"/><stop offset=".5" stop-color="#C0965C"/><stop offset="1" stop-color="#8E6A38"/>
+  </linearGradient>
+  <radialGradient id="gTomato" cx=".33" cy=".28" r=".84">
+    <stop offset="0" stop-color="#FF7A66"/><stop offset=".55" stop-color="#E33B2E"/><stop offset="1" stop-color="#A81E16"/>
+  </radialGradient>
+  <linearGradient id="gCapsicum" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#8AD46C"/><stop offset=".5" stop-color="#4E9B3E"/><stop offset="1" stop-color="#2E6B26"/>
+  </linearGradient>
+  <linearGradient id="gRedPepper" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#FF7A5C"/><stop offset=".5" stop-color="#DA3A26"/><stop offset="1" stop-color="#9E1E10"/>
+  </linearGradient>
+  <linearGradient id="gEggplant" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#A87CD4"/><stop offset=".5" stop-color="#6E3FA0"/><stop offset="1" stop-color="#43216A"/>
+  </linearGradient>
+  <linearGradient id="gChilli" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#8AD46C"/><stop offset=".55" stop-color="#4E9B3E"/><stop offset="1" stop-color="#2E7030"/>
+  </linearGradient>
+  <linearGradient id="gPeas" x1=".2" y1="0" x2=".7" y2="1">
+    <stop offset="0" stop-color="#A5E58C"/><stop offset=".5" stop-color="#5FB047"/><stop offset="1" stop-color="#357A2E"/>
   </linearGradient>
   <linearGradient id="gCrown" x1=".2" y1="0" x2=".7" y2="1">
     <stop offset="0" stop-color="#FFE071"/><stop offset=".5" stop-color="#F5C518"/><stop offset="1" stop-color="#D9A400"/>
@@ -216,6 +254,118 @@ const MARKUP = `
   </g>
   <g stroke="#fff" stroke-width="3.4" stroke-linecap="round" opacity=".55">
     <path d="M26 34v16"/><path d="M32 34v16"/><path d="M38 34v16"/>
+  </g>
+</symbol>
+
+<symbol id="ing-crab" viewBox="0 0 64 64">
+  <g stroke="#A82E12" stroke-width="4.5" stroke-linecap="round" fill="none">
+    <path d="M18 42 8 51"/><path d="M23 47 17 57"/><path d="M46 42 56 51"/><path d="M41 47 47 57"/>
+  </g>
+  <g fill="url(#gCrab)" stroke="#A82E12" stroke-width="2.4">
+    <path d="M13 26c-6-4-11-1-11 5s6 9 11 5l4-5z"/>
+    <path d="M51 26c6-4 11-1 11 5s-6 9-11 5l-4-5z"/>
+  </g>
+  <ellipse cx="32" cy="34" rx="22" ry="15.5" fill="url(#gCrab)"/>
+  <ellipse cx="23" cy="27" rx="7" ry="4" fill="#fff" opacity=".38" transform="rotate(-16 23 27)"/>
+  <g fill="#5E1A0C"><circle cx="25" cy="30" r="2.8"/><circle cx="39" cy="30" r="2.8"/></g>
+</symbol>
+
+<symbol id="ing-shabu-beef" viewBox="0 0 64 64">
+  <ellipse cx="32" cy="34" rx="25" ry="19" fill="url(#gBeef)"/>
+  <g fill="#FBE6E3" opacity=".9">
+    <path d="M11 29c9-5 22-6 34-2-11-1-23 0-34 2z"/>
+    <path d="M9 37c11-4 25-5 37-1-12-1-25 0-37 1z"/>
+    <path d="M15 44c9-3 21-4 30-1-10 0-21 0-30 1z"/>
+  </g>
+  <ellipse cx="22" cy="24" rx="9" ry="4.2" fill="#fff" opacity=".35" transform="rotate(-12 22 24)"/>
+</symbol>
+
+<symbol id="ing-pork-ribs" viewBox="0 0 64 64">
+  <g fill="#F5E8D2">
+    <rect x="2" y="23" width="12" height="7" rx="3.5"/><rect x="2" y="35" width="12" height="7" rx="3.5"/>
+    <rect x="50" y="23" width="12" height="7" rx="3.5"/><rect x="50" y="35" width="12" height="7" rx="3.5"/>
+  </g>
+  <rect x="8" y="19" width="48" height="28" rx="9" fill="url(#gPork)"/>
+  <g stroke="#66341A" stroke-width="2.2" opacity=".45" stroke-linecap="round">
+    <path d="M23 21v24"/><path d="M34 21v24"/><path d="M45 21v24"/>
+  </g>
+  <ellipse cx="21" cy="26" rx="8" ry="3.2" fill="#fff" opacity=".24"/>
+</symbol>
+
+<symbol id="ing-rice" viewBox="0 0 64 64">
+  <path d="M9 45c0-15 10-26 23-26s23 11 23 26z" fill="url(#gRice)"/>
+  <ellipse cx="32" cy="45" rx="23" ry="7.5" fill="url(#gRice)"/>
+  <g fill="#DFD0B0" opacity=".85">
+    <ellipse cx="23" cy="34" rx="4.4" ry="2.5" transform="rotate(-26 23 34)"/>
+    <ellipse cx="39" cy="31" rx="4.4" ry="2.5" transform="rotate(20 39 31)"/>
+    <ellipse cx="31" cy="41" rx="4.4" ry="2.5" transform="rotate(-8 31 41)"/>
+    <ellipse cx="45" cy="41" rx="4" ry="2.3" transform="rotate(32 45 41)"/>
+    <ellipse cx="18" cy="42" rx="4" ry="2.3" transform="rotate(14 18 42)"/>
+  </g>
+  <ellipse cx="24" cy="28" rx="8" ry="3.6" fill="#fff" opacity=".55" transform="rotate(-20 24 28)"/>
+</symbol>
+
+<symbol id="ing-potato" viewBox="0 0 64 64">
+  <ellipse cx="32" cy="33" rx="25" ry="18" fill="url(#gPotato)" transform="rotate(-12 32 33)"/>
+  <g fill="#8E6A38" opacity=".5">
+    <ellipse cx="21" cy="26" rx="3.2" ry="2.1"/><ellipse cx="41" cy="30" rx="2.8" ry="1.9"/>
+    <ellipse cx="30" cy="41" rx="3" ry="2"/><ellipse cx="46" cy="39" rx="2.4" ry="1.6"/>
+  </g>
+  <ellipse cx="21" cy="24" rx="9" ry="4.2" fill="#fff" opacity=".32" transform="rotate(-20 21 24)"/>
+</symbol>
+
+<symbol id="ing-tomato" viewBox="0 0 64 64">
+  <circle cx="32" cy="37" r="22" fill="url(#gTomato)"/>
+  <g fill="#3E8A46">
+    <path d="M32 17c-4-6-9-8-15-7 2 6 7 9 15 7z"/>
+    <path d="M32 17c4-6 9-8 15-7-2 6-7 9-15 7z"/>
+    <path d="M32 16c0-6 1-9 0-12-1 3 0 6 0 12z"/>
+  </g>
+  <ellipse cx="23" cy="29" rx="7.4" ry="4.8" fill="#fff" opacity=".45" transform="rotate(-28 23 29)"/>
+</symbol>
+
+<symbol id="ing-capsicum" viewBox="0 0 64 64">
+  <path d="M32 19c13 0 21 8 21 20s-9 17-21 17-21-5-21-17 8-20 21-20z" fill="url(#gCapsicum)"/>
+  <g fill="#265C20" opacity=".35">
+    <path d="M20 31c0 13 3 21 6 23-6-3-10-11-10-23z"/><path d="M44 31c0 13-3 21-6 23 6-3 10-11 10-23z"/>
+  </g>
+  <rect x="29" y="7" width="6" height="13" rx="3" fill="#3E7A38"/>
+  <ellipse cx="32" cy="20" rx="9" ry="3.6" fill="#4E9B4A"/>
+  <ellipse cx="23" cy="29" rx="5.4" ry="7.4" fill="#fff" opacity=".3" transform="rotate(-14 23 29)"/>
+</symbol>
+
+<symbol id="ing-red-pepper" viewBox="0 0 64 64">
+  <path d="M32 19c13 0 21 8 21 20s-9 17-21 17-21-5-21-17 8-20 21-20z" fill="url(#gRedPepper)"/>
+  <g fill="#8E1A0E" opacity=".35">
+    <path d="M20 31c0 13 3 21 6 23-6-3-10-11-10-23z"/><path d="M44 31c0 13-3 21-6 23 6-3 10-11 10-23z"/>
+  </g>
+  <rect x="29" y="7" width="6" height="13" rx="3" fill="#3E7A38"/>
+  <ellipse cx="32" cy="20" rx="9" ry="3.6" fill="#4E9B4A"/>
+  <ellipse cx="23" cy="29" rx="5.4" ry="7.4" fill="#fff" opacity=".3" transform="rotate(-14 23 29)"/>
+</symbol>
+
+<symbol id="ing-eggplant" viewBox="0 0 64 64">
+  <path d="M43 21c9 7 10 21 2 29s-22 9-29 1-3-20 6-27c7-5 15-8 21-3z" fill="url(#gEggplant)"/>
+  <g fill="#3E7A38">
+    <path d="M40 19c3-6 9-9 15-9-1 7-6 11-13 13z"/>
+    <path d="M47 8c2-3 5-5 9-5-1 4-4 7-9 5z"/>
+  </g>
+  <ellipse cx="25" cy="33" rx="5" ry="10" fill="#fff" opacity=".26" transform="rotate(-32 25 33)"/>
+</symbol>
+
+<symbol id="ing-green-chilli" viewBox="0 0 64 64">
+  <path d="M21 15c11-1 24 8 28 21 3 10-1 19-8 21-6 1-10-3-8-10 3-11-4-21-15-23-5-1-3-8 3-9z" fill="url(#gChilli)"/>
+  <path d="M21 15c-4-4-10-4-14-1 3 5 9 6 14 3z" fill="#3E7A38"/>
+  <path d="M29 24c9 5 14 14 15 24" stroke="#A5E58C" stroke-width="3.2" fill="none" opacity=".45" stroke-linecap="round"/>
+</symbol>
+
+<symbol id="ing-peas" viewBox="0 0 64 64">
+  <path d="M6 40c3-16 19-27 37-24 7 1 11 6 10 12-2 7-10 9-18 9-12 1-21 6-25 12-3 5-6 0-4-9z" fill="url(#gPeas)"/>
+  <g fill="#7FCB63" stroke="#2F7030" stroke-width="2">
+    <circle cx="21" cy="35" r="6.6"/><circle cx="35" cy="30" r="6.6"/><circle cx="48" cy="26" r="6"/>
+  </g>
+  <g fill="#fff" opacity=".5">
+    <ellipse cx="19" cy="32" rx="2.4" ry="1.6"/><ellipse cx="33" cy="27" rx="2.4" ry="1.6"/>
   </g>
 </symbol>
 

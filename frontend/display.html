@@ -699,7 +699,6 @@
       <div class="board" id="board" role="list" aria-label="Department leaderboard"></div>
       <div class="board-foot">
         <span id="boardRange">&nbsp;</span>
-        <span class="pips" id="boardPips" aria-hidden="true"></span>
       </div>
     </section>
   </div>
@@ -892,11 +891,29 @@ function spawnSplash(el) {
 }
 
 /* ---------- leaderboard ---------- */
-function renderBoard(entries, hitId) {
-  const keepScroll = board.scrollTop;
+/* The board shows only the TOP THREE departments (see PRD 4.4, revised).
+   Ranking is competition-style, so a tie can legitimately put more than three
+   teams in the top three places — all of them are shown, because hiding a team
+   that is level on points would be visibly unfair on a projector. MAX_ROWS is
+   only a layout guard against a freak many-way tie.
+   Departments on zero are excluded: before anyone scores they all share rank 1,
+   which would otherwise put the whole list on screen. */
+const TOP_N = 3;
+const MAX_ROWS = 6;
+
+function topThree(entries) {
+  const scored = entries.filter((d) => d.score > 0);
+  return scored.filter((d) => d.rank <= TOP_N).slice(0, MAX_ROWS);
+}
+
+function renderBoard(allEntries, hitId) {
+  const entries = topThree(allEntries);
+  totalDepts = allEntries.length;
 
   if (!entries.length) {
-    board.innerHTML = '<div class="empty">No departments yet — add one on the admin screen.</div>';
+    board.innerHTML = allEntries.length
+      ? '<div class="empty">No scores yet — the top three appear here.</div>'
+      : '<div class="empty">No departments yet — add one on the admin screen.</div>';
     deptCount = 0;
     updateFoot();
     return;
@@ -922,11 +939,6 @@ function renderBoard(entries, hitId) {
     return row;
   }));
 
-  // replaceChildren resets scrollTop; restore it so the board does not jump
-  // back to the top on every score. This must be 'instant':
-  // scroll-behavior:smooth would otherwise animate the restore, and that
-  // animation races revealRow() below and can cancel it.
-  board.scrollTo({ top: keepScroll, behavior: 'instant' });
   deptCount = entries.length;
   fitRows();
   updateFoot();
@@ -935,63 +947,29 @@ function renderBoard(entries, hitId) {
 const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/* ---------- board scrolling ----------
-   The board shows VISIBLE_ROWS at a time. It does NOT cycle on its own — the
-   view only moves when a department scores, which pulls that row in. The
-   footer reports which slice is on screen. */
-const VISIBLE_ROWS = 8;
-
+/* ---------- board sizing ----------
+   Only the top three are shown, so the board never scrolls. The rows divide
+   the full column height between them, which makes each one much larger and
+   easier to read from the back of the room. */
 const boardCol = document.querySelector('.board-col');
 let deptCount = 0;
+let totalDepts = 0;
 
-// Size rows so exactly VISIBLE_ROWS fill the column height, whatever the screen.
 function fitRows() {
   const gap = parseFloat(getComputedStyle(board).rowGap) || 12;
   const h = board.clientHeight;
-  if (!h) return;
-  const rowH = Math.max(56, (h - gap * (VISIBLE_ROWS - 1)) / VISIBLE_ROWS);
+  if (!h || !deptCount) return;
+  const rowH = Math.max(72, (h - gap * (deptCount - 1)) / deptCount);
   board.style.setProperty('--row-h', `${rowH}px`);
 }
 new ResizeObserver(() => { fitRows(); updateFoot(); }).observe(board);
 
+// The crowd should know the board is a top-three cut, not the whole field.
 function updateFoot() {
-  const gap = parseFloat(getComputedStyle(board).rowGap) || 12;
-  const rowH = parseFloat(getComputedStyle(board).getPropertyValue('--row-h')) || 96;
-  const pages = Math.max(1, Math.ceil(deptCount / VISIBLE_ROWS));
-  const page = Math.min(pages - 1, Math.round(board.scrollTop / ((rowH + gap) * VISIBLE_ROWS)));
-  const first = deptCount ? page * VISIBLE_ROWS + 1 : 0;
-  const last = Math.min(deptCount, (page + 1) * VISIBLE_ROWS);
-
-  boardCol.dataset.more = board.scrollHeight > board.clientHeight + 4 ? '1' : '0';
-  $('boardRange').textContent = deptCount > VISIBLE_ROWS
-    ? `Showing ${first}\u2013${last} of ${deptCount}`
-    : `${deptCount} department${deptCount === 1 ? '' : 's'}`;
-
-  const pips = $('boardPips');
-  if (pips.childElementCount !== (pages > 1 ? pages : 0)) {
-    pips.replaceChildren(...Array.from({ length: pages > 1 ? pages : 0 }, () => document.createElement('i')));
-  }
-  [...pips.children].forEach((el, i) => el.classList.toggle('on', i === page));
-}
-
-board.addEventListener('scroll', updateFoot, { passive: true });
-
-// Pull a department into view — used when it scores, so the toss the admin
-// just logged is always the one on screen.
-function revealRow(id) {
-  const el = board.querySelector(`[data-id="${CSS.escape(id)}"]`);
-  if (!el) return;
-  const before = board.scrollTop;
-  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  // Smooth scrolling is driven by the compositor, so it never progresses while
-  // the tab is not rendering. Snap into place if the animation did not move.
-  // The scoring row must be on screen either way.
-  setTimeout(() => {
-    if (Math.abs(board.scrollTop - before) < 2) {
-      el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-    }
-    updateFoot();
-  }, 420);
+  boardCol.dataset.more = '0';
+  $('boardRange').textContent = deptCount
+    ? `Top ${deptCount} of ${totalDepts} departments`
+    : `${totalDepts} department${totalDepts === 1 ? '' : 's'}`;
 }
 
 /* ---------- counters ---------- */
@@ -1100,11 +1078,9 @@ function apply(payload) {
   setTeamCard(team, !firstPaint && isScore ? ev.department_id : null, isScore ? ev.points_awarded : 0);
   renderReveal(entries, announced);
 
-  // Pull the department that just scored into view. Deferred so it lands after
-  // renderBoard's scroll restore. Uses a timer rather than requestAnimationFrame
-  // because rAF is paused entirely while a tab is not compositing, which would
-  // silently skip the scroll.
-  if (isScore) setTimeout(() => revealRow(ev.department_id), 32);
+  // No scroll-into-view any more: the board is a fixed top-three cut. A team
+  // outside the top three still shows its activity through the pot and the
+  // "Now Playing" card.
 
   firstPaint = false;
 }

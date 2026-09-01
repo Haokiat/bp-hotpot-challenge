@@ -1,6 +1,17 @@
 # Hotpot Challenge (It's HOT!) — Product Requirements Document
 
-*This document reflects confirmed decisions as of the latest review. Two items are still pending external input — see Section 9.*
+*This document reflects confirmed decisions as of the latest review. Nothing is still pending external input — see Section 9.*
+
+> **Revision — 30 Aug 2026.** The leaderboard now shows only the **top three
+> departments**, not the whole field (§4.4, §7.4). This reverses a previously
+> confirmed decision. It was changed after testing, at the organiser's request:
+> three large rows read far better from the back of a room than fifteen small
+> ones. The tie rule is unaffected — see §4.4 for what happens on a tie, and
+> what the change gives up.
+
+> **Revision — 30 Aug 2026.** Both pending inputs are now **confirmed and
+> loaded** (§9): sixteen ingredients priced 10 to 50 points, and thirteen
+> departments. Section 9 has no outstanding items.
 
 > **Revision — 28 Aug 2026.** The **Undo** requirement (previously §4.3, §7.3)
 > has been replaced by **toss history correction**. Undo could only reverse the
@@ -94,7 +105,30 @@ Access:
 
 ### 4.4 Score Display & Leaderboard
 - Real-time score counter displayed prominently.
-- Department-level leaderboard visible during gameplay, showing **all departments at once** (no top-N cutoff).
+- Department-level leaderboard visible during gameplay, showing the **top three departments**.
+
+**On showing only the top three.** The original requirement was to show every
+department at once, with no cutoff. With around fifteen departments that meant
+fifteen small rows on a projector, which the organiser found hard to read from
+the back of the room during testing. Three rows use the same space, so each is
+far larger and readable at a distance.
+
+What this gives up: a department outside the top three does not appear on the
+leaderboard at all. Its scoring is still visible — the ingredient drops into the
+pot and the "Now Playing" card shows the team, its running score and its toss
+count — but the crowd cannot see its standing. The organiser accepted this
+after testing.
+
+Two rules protect fairness:
+- **A tie is never broken to fit the cut.** Ranking is competition-style, so if
+  several departments are level in the top three places, all of them are shown,
+  even if that means more than three rows.
+- **Departments on zero are not shown.** Before anyone scores, every department
+  is level on nothing, so the board shows a "no scores yet" message rather than
+  an arbitrary three.
+
+The footer states the cut plainly — for example "Top 3 of 15 departments" — so
+the crowd knows the board is not the whole field.
 - Leaderboard and score counter update **automatically** — no manual refresh is needed.
 - If two or more departments tie for the highest score, the system recognises **all tied departments as winners**.
 
@@ -206,7 +240,10 @@ For the Hotpot Challenge app, use **leaf green** as the primary accent colour, s
 
 ### 7.4 Score Display & Leaderboard
 - The system displays a real-time score counter prominently on the screen.
-- The leaderboard displays all departments at once, with no top-N limit.
+- The leaderboard displays the top three departments, ranked by score.
+- If a tie places more than three departments in the top three positions, every tied department is shown; a tie is never broken to fit the cut.
+- Before any department has scored, the leaderboard shows a "no scores yet" message rather than an arbitrary selection.
+- The leaderboard states how many departments exist in total, so the top-three cut is evident to anyone watching.
 - The leaderboard and score counter update automatically after each scoring action, with no manual refresh required.
 - If two or more departments finish with the same top score, the system marks all of them as winners.
 
@@ -255,7 +292,35 @@ These are risks the team should plan around, even though the related decisions h
 
 ## 9. Pending Inputs
 
-Only two items remain outstanding. Everything else in this PRD reflects a confirmed decision.
+**None.** Both items that were outstanding are now confirmed and loaded. They
+are recorded below.
 
-1. **Final ingredient list, with a confirmed point value for each ingredient.** Needed before final scoring logic can be tested end-to-end. Use a placeholder dataset for development in the meantime.
-2. **Final department list**, to load into the system ahead of the event. (Note: this list can still change, and the admin can also add/edit/remove departments directly in the app, including live during the event — so this is a lower-risk item, but the starting list is still needed for initial setup and testing.)
+The department list can still change: the admin can add, rename, archive and
+restore departments directly in the app, including live during the event.
+
+### Resolved — final department list (confirmed 30 Aug 2026)
+
+Thirteen departments, loaded exactly as supplied:
+
+BP · CHROO · Corp Comms · Cumulus · HI · HRP · HRPS · LDS · PCG · PST ·
+ServiceSG · SPR · WD
+
+### Resolved — final ingredient list (confirmed 30 Aug 2026)
+
+Sixteen ingredients, loaded into the system. All point values are positive and
+vary by ingredient, as §4.2 requires.
+
+| Ingredient | Points | | Ingredient | Points |
+|---|---|---|---|---|
+| Crab | 50 | | Mushroom | 15 |
+| Shabu Beef | 40 | | Carrot | 15 |
+| Pork Ribs | 30 | | Tomato | 15 |
+| Rice | 25 | | Capsicum | 10 |
+| Cabbage | 20 | | Red Pepper | 10 |
+| Corn | 20 | | Eggplant | 10 |
+| Broccoli | 20 | | Green Chilli | 10 |
+| Potato | 15 | | Peas | 10 |
+
+Each ingredient has its own drawn illustration, so the operator can tell them
+apart at a glance and the pot on the display screen shows what was actually
+tossed.

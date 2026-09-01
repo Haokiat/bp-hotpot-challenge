@@ -194,22 +194,26 @@ console.log('\n\x1b[1m3. When the operator makes a mistake\x1b[0m  (PRD 7.3)');
   const log = (await get(`/score-events?limit=10&department_id=${dept.id}`)).body.events;
   const older = log[2];
   const before = await scoreNow();
-  const swap = await post(`/score/${older.id}/replace`, { ingredient_id: 'ing_1' });
+  // Swap to whatever the FIRST seeded ingredient is, rather than hard-coding a
+  // name — the list is event data and changes.
+  const firstIng = (await get('/ingredients')).body.ingredients[0];
+  const swap = await post(`/score/${older.id}/replace`, { ingredient_id: firstIng.id });
   check('a mis-tapped ingredient can be swapped, even a few tosses back', () => {
     eq(swap.status, 200, 'status');
-    eq(swap.body.event.ingredient_name, 'Broccoli', 'ingredient changed');
+    eq(swap.body.event.ingredient_name, firstIng.name, 'ingredient changed');
   });
   // Resolve every await BEFORE check(): check() is synchronous and does not
   // await, so an async body's assertion would never run and would count as a
   // pass regardless of the result.
   const afterSwap = await scoreNow();
   check('  └ the score moves by exactly the difference', () =>
-    eq(afterSwap - before, 10 - older.points_awarded, 'delta'));
+    eq(afterSwap - before, firstIng.point_value - older.points_awarded, 'delta'));
 
   const removed = await post(`/score/${older.id}/void`);
   const afterRemove = await scoreNow();
   check('a toss can be removed outright', () => eq(removed.status, 200, 'status'));
-  check('  └ and its points come off the total', () => eq(afterRemove, afterSwap - 10, 'score'));
+  check('  └ and its points come off the total', () =>
+    eq(afterRemove, afterSwap - firstIng.point_value, 'score'));
 
   const putBack = await post(`/score/${older.id}/restore`);
   const afterRestore = await scoreNow();
